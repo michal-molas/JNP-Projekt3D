@@ -9,22 +9,30 @@
 // referenced by the GPU.
 // An example of this can be found in the class method: OnDestroy().
 using Microsoft::WRL::ComPtr;
+using namespace DirectX;
 
-//inline std::string HrToString(HRESULT hr)
-//{
-//    char s_str[64] = {};
-//    sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
-//    return std::string(s_str);
-//}
-//
-//class HrException : public std::runtime_error
-//{
-//public:
-//    HrException(HRESULT hr) : std::runtime_error(HrToString(hr)), hr(hr) {}
-//    HRESULT Error() const { return hr; }
-//private:
-//    const HRESULT hr;
-//};
+
+
+inline void GetAssetsPath(_Out_writes_(pathSize) WCHAR* path, UINT pathSize)
+{
+    if (path == nullptr)
+    {
+        throw std::exception();
+    }
+
+    DWORD size = GetModuleFileName(nullptr, path, pathSize);
+    if (size == 0 || size == pathSize)
+    {
+        // Method failed or path was truncated.
+        throw std::exception();
+    }
+
+    WCHAR* lastSlash = wcsrchr(path, L'\\');
+    if (lastSlash)
+    {
+        *(lastSlash + 1) = L'\0';
+    }
+}
 
 inline void ThrowIfFailed(HRESULT hr)
 {
@@ -50,12 +58,32 @@ public:
     const WCHAR* GetTitle() const { return title.c_str(); }
 
 private:
+    struct Vertex
+    {
+        FLOAT position[3];
+        FLOAT color[4];
+    };
+
     std::wstring title;
+    //std::wstring assetsPath;
+    //FLOAT aspectRatio;
+    Vertex triangleVertices[3] =
+    {
+        { 0.0f, 1.0f, 0.5f,         0.0f, 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 0.5f,         1.0f, 0.0f, 0.0f, 1.0f },
+        { -1.0f, -1.0f, 0.5f,       0.0f, 0.0f, 1.0f, 1.0f }
+    };
+
+    const UINT vertexBufferSize = sizeof(triangleVertices);
+    size_t const numVertices = vertexBufferSize / sizeof(Vertex);
+
     UINT width;
     UINT height;
     static const UINT FrameCount = 2;
 
     // Pipeline objects.
+    D3D12_VIEWPORT viewport;
+    D3D12_RECT scissorRect;
     ComPtr<IDXGISwapChain3> swapChain;
     ComPtr<ID3D12Device> device;
     ComPtr<ID3D12Resource> renderTargets[FrameCount];
@@ -64,8 +92,13 @@ private:
     ComPtr<ID3D12DescriptorHeap> rtvHeap;
     ComPtr<ID3D12PipelineState> pipelineState;
     ComPtr<ID3D12GraphicsCommandList> commandList;
+    ComPtr<ID3D12RootSignature> rootSignature;
     UINT rtvDescriptorSize;
     UINT currentBackBufferIndex;
+
+    // App resources.
+    ComPtr<ID3D12Resource> vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
     // Synchronization objects.
     UINT frameIndex;
@@ -77,6 +110,7 @@ private:
     void LoadAssets();
     void PopulateCommandList();
     void WaitForPreviousFrame();
+    std::wstring GetAssetFullPath(LPCWSTR assetName);
 };
 
 
