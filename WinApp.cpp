@@ -39,7 +39,7 @@ int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
         dApp);
 
     // Initialize the sample. OnInit is defined in each child-implementation of DXSample.
-    dApp->OnInit();
+    dApp->init();
 
     ShowWindow(hwnd, nCmdShow);
 
@@ -55,7 +55,7 @@ int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
         }
     }
 
-    dApp->OnDestroy();
+    dApp->destroy();
 
     // Return this part of the WM_QUIT message to Windows.
     return static_cast<char>(msg.wParam);
@@ -93,8 +93,8 @@ LRESULT CALLBACK WinApp::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     case WM_PAINT:
         if (dApp)
         {
-            dApp->OnUpdate();
-            dApp->OnRender();
+            dApp->update();
+            dApp->render();
         }
         return 0;
 
