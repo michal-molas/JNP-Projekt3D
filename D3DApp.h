@@ -6,6 +6,7 @@
 #include <dxgi1_6.h>
 #include <wrl.h>
 #include <DirectXMath.h>
+#include <wincodec.h>
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -24,6 +25,7 @@ struct Vertex
     FLOAT position[3];
     FLOAT normal[3];
     FLOAT color[4];
+    FLOAT tex_coord[2];
 };
 
 struct vs_const_buffer_t {
@@ -65,6 +67,8 @@ private:
 
     static const UINT FrameCount = 2;
 
+    IWICImagingFactory* wic_factory = nullptr;
+
     // Pipeline objects.
     D3D12_VIEWPORT viewport;
     ComPtr<ID3D12Device> device;
@@ -96,6 +100,8 @@ private:
 
     ComPtr<ID3D12Resource> depthBuffer;
 
+    ComPtr<ID3D12Resource> texture_resource;
+
     // Synchronization objects.
     UINT frameIndex;
     HANDLE fenceEvent;
@@ -104,6 +110,10 @@ private:
 
     XMFLOAT3 offset = {0.f, 0.f, 0.f};
     FLOAT rotation = 0.0f;
+
+    UINT const bmp_px_size = 4;
+    UINT bmp_width = 0, bmp_height = 0;
+    BYTE* bmp_bits = nullptr;
 
     XMMATRIX tempMatrix;
 
@@ -131,4 +141,8 @@ private:
     void createFence();
     std::pair<Vertex*, size_t> getVertices();
     std::pair<Vertex*, size_t> getHouseVertices();
+
+    HRESULT LoadBitmapFromFile(
+        PCWSTR uri, UINT& width, UINT& height, BYTE** ppBits
+    );
 };

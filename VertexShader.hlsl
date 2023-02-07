@@ -12,9 +12,10 @@ cbuffer vs_const_buffer_t {
 struct vs_output_t {
 	float4 position : SV_POSITION;
 	float4 color : COLOR;
+	float2 tex : TEXCOORD;
 };
 
-vs_output_t main(float3 pos : POSITION, float3 norm : NORMAL, float4 col : COLOR) {
+vs_output_t main(float3 pos : POSITION, float3 norm : NORMAL, float4 col : COLOR, float2 tex : TEXCOORD) {
 	vs_output_t result;
 
 	float4 NW = mul(float4(norm, 0.0f), matWorldView);
@@ -22,6 +23,7 @@ vs_output_t main(float3 pos : POSITION, float3 norm : NORMAL, float4 col : COLOR
 
 	result.position = mul(float4(pos, 1.0f), matWorldViewProj);
 	result.color = mul(max(-dot(normalize(LW), normalize(NW)), 0.0f), colLight * col);
+	result.tex = tex;
 
 	return result;
 }
