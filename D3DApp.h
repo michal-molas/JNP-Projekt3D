@@ -86,6 +86,11 @@ private:
     ComPtr<ID3D12Resource> vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
+    ComPtr<ID3D12Resource> houseVertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW houseVertexBufferView;
+
+
+
     ComPtr<ID3D12Resource> constBuffer;
     UINT8* constBufferData;
 
@@ -119,9 +124,11 @@ private:
     void createPipelineState();
     void createCommandList();
     void createBuffers();
-    void createVertexBuffer();
+    void createVertexBuffer(ComPtr<ID3D12Resource>& buffer, std::pair<Vertex*, size_t> verticies,
+        D3D12_VERTEX_BUFFER_VIEW& bufferView);
     void createConstBuffer();
     void createDepthBuffer();
     void createFence();
     std::pair<Vertex*, size_t> getVertices();
+    std::pair<Vertex*, size_t> getHouseVertices();
 };

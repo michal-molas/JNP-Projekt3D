@@ -72,7 +72,7 @@ void D3DApp::update()
         XMMatrixTranspose(wvp_matrix)
     );
 
-    wvp_matrix *= XMMatrixRotationY(2.f * angle);
+    //wvp_matrix *= XMMatrixRotationY(2.f * angle);
 
     wvp_matrix *= XMMatrixTranslation(0.0f, -1.5f, 8.0f);
 
@@ -171,8 +171,12 @@ void D3DApp::populateCommandList()
         depthBufferHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1, 0, 0, nullptr);
 
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
     commandList->DrawInstanced(static_cast<UINT>(getVertices().second / sizeof(Vertex)), 1, 0, 0);
+
+    commandList->IASetVertexBuffers(0, 1, &houseVertexBufferView);
+    commandList->DrawInstanced(static_cast<UINT>(getHouseVertices().second / sizeof(Vertex)), 1, 0, 0);
 
     barriers = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -406,12 +410,14 @@ void D3DApp::createCommandList()
 
 void D3DApp::createBuffers()
 {
-    createVertexBuffer();
+    createVertexBuffer(vertexBuffer, getVertices(), vertexBufferView);
+    createVertexBuffer(houseVertexBuffer, getHouseVertices(), houseVertexBufferView);
     createConstBuffer();
     createDepthBuffer();
 }
 
-void D3DApp::createVertexBuffer()
+void D3DApp::createVertexBuffer(ComPtr<ID3D12Resource>& buffer, 
+    std::pair<Vertex*, size_t> vertices, D3D12_VERTEX_BUFFER_VIEW& bufferView)
 {
     D3D12_HEAP_PROPERTIES heD3DApprops;
     heD3DApprops.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -423,7 +429,7 @@ void D3DApp::createVertexBuffer()
     D3D12_RESOURCE_DESC resourceDesc;
     resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resourceDesc.Alignment = 0;
-    resourceDesc.Width = getVertices().second;
+    resourceDesc.Width = vertices.second;
     resourceDesc.Height = 1;
     resourceDesc.DepthOrArraySize = 1;
     resourceDesc.MipLevels = 1;
@@ -439,19 +445,17 @@ void D3DApp::createVertexBuffer()
         &resourceDesc,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
-        IID_PPV_ARGS(&vertexBuffer)));
-
-    auto [vertices, VERTICES_SIZE] = getVertices();
+        IID_PPV_ARGS(&buffer)));
 
     UINT8* pVertexDataBegin;
     CD3DX12_RANGE readRange(0, 0);
-    ThrowIfFailed(vertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-    memcpy(pVertexDataBegin, vertices, VERTICES_SIZE);
-    vertexBuffer->Unmap(0, nullptr);
+    ThrowIfFailed(buffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+    memcpy(pVertexDataBegin, vertices.first, vertices.second);
+    buffer->Unmap(0, nullptr);
 
-    vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    vertexBufferView.StrideInBytes = sizeof(Vertex);
-    vertexBufferView.SizeInBytes = static_cast<UINT>(getVertices().second);
+    bufferView.BufferLocation = buffer->GetGPUVirtualAddress();
+    bufferView.StrideInBytes = sizeof(Vertex);
+    bufferView.SizeInBytes = static_cast<UINT>(vertices.second);
 }
 
 void D3DApp::createConstBuffer()
@@ -719,17 +723,73 @@ std::pair<Vertex*, size_t> D3DApp::getVertices()
     return { data, sizeof(data) };
 }
 
-void D3DApp::checkKeys() {
-    if ((GetAsyncKeyState(VK_LEFT) & 0x8000) | (GetAsyncKeyState('A') & 0x8000))
-        offset.x += .1f;
-    if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) | (GetAsyncKeyState('D') & 0x8000))
-        offset.x -= .1f;
-    if ((GetAsyncKeyState(VK_UP) & 0x8000) | (GetAsyncKeyState('W') & 0x8000))
-        offset.z -= .1f;
-    if ((GetAsyncKeyState(VK_DOWN) & 0x8000) | (GetAsyncKeyState('S') & 0x8000))
-        offset.z += .1f;
-    if (GetAsyncKeyState('Q') & 0x8000)
-        rotation += 0.02f;
-    if (GetAsyncKeyState('E') & 0x8000)
-        rotation -= 0.02f;
+std::pair<Vertex*, size_t> D3DApp::getHouseVertices() {
+    static Vertex data[] = {
+        {10.00000f, 0.00000f, 20.00000f, -10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, -10.00000f, 0.00000f, -0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, -10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {10.00000f, 0.00000f, 20.00000f, 10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, 10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, 10.00000f, 0.00000f, -0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+
+        {10.00000f, 10.00000f, 10.00000f, 10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, 10.00000f, 0.00000f, -0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, 10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {10.00000f, 10.00000f, 10.00000f, -10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, -10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, -10.00000f, 0.00000f, -0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        //
+
+        {0.00000f, 0.00000f, 10.00000f, -0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, -0.00000f, 0.00000f, -10.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, -0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {0.00000f, 0.00000f, 10.00000f, 0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, 0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, 0.00000f, 0.00000f, 10.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+
+        {10.00000f, 10.00000f, 10.00000f, -0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, -0.00000f, 0.00000f, 10.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, -0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {10.00000f, 10.00000f, 10.00000f, 0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 0.00000f, 10.00000f, 0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, 0.00000f, 0.00000f, -10.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        //
+        {0.00000f, 0.00000f, 10.00000f, 10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, 10.00000f, 0.00000f, -0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, 10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {0.00000f, 0.00000f, 10.00000f, -10.00000f, 0.00000f, 0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, -10.00000f, 0.00000f, 0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, -10.00000f, 0.00000f, 0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+
+        {0.00000f, 10.00000f, 20.00000f, -10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, -10.00000f, 0.00000f, -0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, -10.00000f, 0.00000f, -0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {0.00000f, 10.00000f, 20.00000f, 10.00000f, 0.00000f, 0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, 10.00000f, 0.00000f, 0.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 10.00000f, 10.00000f, 10.00000f, 0.00000f, 0.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        //
+        {10.00000f, 0.00000f, 20.00000f, 0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, 0.00000f, 0.00000f, 10.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, 0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {10.00000f, 0.00000f, 20.00000f, -0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, -0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, -0.00000f, 0.00000f, -10.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+
+        {0.00000f, 10.00000f, 20.00000f, 0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, 0.00000f, 0.00000f, -10.00000f, 1.0f, 1.0f, 1.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, 0.00000f, 0.00000f, -10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+
+        {0.00000f, 10.00000f, 20.00000f, -0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {0.00000f, 0.00000f, 20.00000f, -0.00000f, 0.00000f, 10.00000f, 0.0f, 1.0f, 0.0f, 1.f},
+        {10.00000f, 10.00000f, 20.00000f, -0.00000f, 0.00000f, 10.00000f, 1.0f, 1.0f, 1.0f, 1.f}
+    };
+
+    return { data, sizeof(data) };
 }

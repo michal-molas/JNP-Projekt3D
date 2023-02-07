@@ -95,7 +95,7 @@ LRESULT CALLBACK WinApp::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     case WM_PAINT:
         if (dApp)
         {
-            dApp->checkKeys();
+            //dApp->checkKeys();
             dApp->update();
             dApp->render();
         }
