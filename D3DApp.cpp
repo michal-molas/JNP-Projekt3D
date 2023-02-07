@@ -24,6 +24,7 @@ D3DApp::D3DApp(UINT width, UINT height, CONST TCHAR* name) :
 
 void D3DApp::init()
 {
+    tempMatrix = XMMatrixIdentity();
     loadPipeline();
     loadAssets();
 }
@@ -63,30 +64,37 @@ void D3DApp::update()
     vsConstBuffer.colLight = { 1.f, 1.f, 1.f, 1.f };
     vsConstBuffer.dirLight = { 0.f, 0.f, 1.f, 0.f };
 
-    XMMATRIX wvp_matrix = XMMatrixTranspose(XMMatrixIdentity());
+    //XMMATRIX wvp_matrix = XMMatrixTranspose(XMMatrixIdentity());
+    XMMATRIX wvp_matrix = XMMatrixIdentity();
 
     XMStoreFloat4x4(
         &vsConstBuffer.matView,
-        wvp_matrix
+        XMMatrixTranspose(wvp_matrix)
     );
 
-    // World space
-    wvp_matrix = XMMatrixMultiply(
-        XMMatrixRotationY(2.f * angle),
-        XMMatrixRotationX(pi() / 80.f)
-    );
+    wvp_matrix *= XMMatrixRotationY(2.f * angle);
 
-    wvp_matrix = XMMatrixMultiply(
-        wvp_matrix,
-        XMMatrixTranslation(0.0f, -1.5f, 8.0f)
-    );
+    wvp_matrix *= XMMatrixTranslation(0.0f, -1.5f, 8.0f);
 
-    wvp_matrix = XMMatrixTranspose(wvp_matrix);
+    if ((GetAsyncKeyState(VK_LEFT) & 0x8000) | (GetAsyncKeyState('A') & 0x8000))
+        tempMatrix *= XMMatrixTranslation(0.1f, 0.0f, 0.0f);
+    if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) | (GetAsyncKeyState('D') & 0x8000))
+        tempMatrix *= XMMatrixTranslation(-0.1f, 0.0f, 0.0f);
+    if ((GetAsyncKeyState(VK_UP) & 0x8000) | (GetAsyncKeyState('W') & 0x8000))
+        tempMatrix *= XMMatrixTranslation(0.0f, 0.0f, -0.1f);
+    if ((GetAsyncKeyState(VK_DOWN) & 0x8000) | (GetAsyncKeyState('S') & 0x8000))
+        tempMatrix *= XMMatrixTranslation(0.0f, 0.0f, 0.1f);
+    if (GetAsyncKeyState('Q') & 0x8000)
+        tempMatrix *= XMMatrixRotationY(0.02f);
+    if (GetAsyncKeyState('E') & 0x8000)
+        tempMatrix *= XMMatrixRotationY(-0.02f);
+
+    wvp_matrix *= tempMatrix;
+
     XMStoreFloat4x4(
         &vsConstBuffer.matWorldView,
-        wvp_matrix
+        XMMatrixTranspose(wvp_matrix)
     );
-    wvp_matrix = XMMatrixTranspose(wvp_matrix);
 
     // Projection space
     wvp_matrix = XMMatrixMultiply(
@@ -96,10 +104,9 @@ void D3DApp::update()
         )
     );
 
-    wvp_matrix = XMMatrixTranspose(wvp_matrix);
     XMStoreFloat4x4(
         &vsConstBuffer.matWorldViewProj,
-        wvp_matrix
+        XMMatrixTranspose(wvp_matrix)
     );
 
     memcpy(
@@ -710,4 +717,19 @@ std::pair<Vertex*, size_t> D3DApp::getVertices()
     };
 
     return { data, sizeof(data) };
+}
+
+void D3DApp::checkKeys() {
+    if ((GetAsyncKeyState(VK_LEFT) & 0x8000) | (GetAsyncKeyState('A') & 0x8000))
+        offset.x += .1f;
+    if ((GetAsyncKeyState(VK_RIGHT) & 0x8000) | (GetAsyncKeyState('D') & 0x8000))
+        offset.x -= .1f;
+    if ((GetAsyncKeyState(VK_UP) & 0x8000) | (GetAsyncKeyState('W') & 0x8000))
+        offset.z -= .1f;
+    if ((GetAsyncKeyState(VK_DOWN) & 0x8000) | (GetAsyncKeyState('S') & 0x8000))
+        offset.z += .1f;
+    if (GetAsyncKeyState('Q') & 0x8000)
+        rotation += 0.02f;
+    if (GetAsyncKeyState('E') & 0x8000)
+        rotation -= 0.02f;
 }

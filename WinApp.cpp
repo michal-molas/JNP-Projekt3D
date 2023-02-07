@@ -79,6 +79,8 @@ LRESULT CALLBACK WinApp::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     case WM_KEYDOWN:
         if (dApp)
         {
+            //dApp->onKeyDown(wParam);
+            //dApp->update();
             //dApp->OnKeyDown(static_cast<UINT8>(wParam));
         }
         return 0;
@@ -93,6 +95,7 @@ LRESULT CALLBACK WinApp::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     case WM_PAINT:
         if (dApp)
         {
+            dApp->checkKeys();
             dApp->update();
             dApp->render();
         }

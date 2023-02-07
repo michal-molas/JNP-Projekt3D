@@ -32,6 +32,7 @@ struct vs_const_buffer_t {
     XMFLOAT4X4 matView;
     XMFLOAT4 colLight;
     XMFLOAT4 dirLight;
+
     XMFLOAT4 padding[(256 - 3 * sizeof(XMFLOAT4X4) - 2 * sizeof(XMFLOAT4)) / sizeof(XMFLOAT4)];
 };
 
@@ -45,6 +46,8 @@ public:
     void render();
     void resize();
     void destroy();
+
+    void checkKeys();
 
     //HWND GetHWND() const { return hwnd; }
     UINT GetWidth() const { return width; }
@@ -93,6 +96,11 @@ private:
     HANDLE fenceEvent;
     ComPtr<ID3D12Fence> fence;
     UINT64 fenceValue;
+
+    XMFLOAT3 offset = {0.f, 0.f, 0.f};
+    FLOAT rotation = 0.0f;
+
+    XMMATRIX tempMatrix;
 
     float angle;
 
