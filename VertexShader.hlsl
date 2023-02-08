@@ -15,14 +15,21 @@ struct vs_output_t {
 	float2 tex : TEXCOORD;
 };
 
-vs_output_t main(float3 pos : POSITION, float3 norm : NORMAL, float4 col : COLOR, float2 tex : TEXCOORD) {
+vs_output_t main(float3 pos : POSITION, float3 norm : NORMAL, float4 col : COLOR, float2 tex : TEXCOORD, uint is_no_light : BLENDINDICES) {
 	vs_output_t result;
 
 	float4 NW = mul(float4(norm, 0.0f), matWorldView);
 	float4 LW = mul(dirLight, matView);
 
 	result.position = mul(float4(pos, 1.0f), matWorldViewProj);
-	result.color = mul(max(-dot(normalize(LW), normalize(NW)), 0.0f), colLight * col);
+	if (is_no_light == 0)
+	{
+		result.color = mul(max(-dot(normalize(LW), normalize(NW)), 0.0f), colLight * col);
+	}
+	else
+	{
+		result.color = col;
+	}
 	result.tex = tex;
 
 	return result;

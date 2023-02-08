@@ -26,6 +26,7 @@ struct Vertex
     FLOAT normal[3];
     FLOAT color[4];
     FLOAT tex_coord[2];
+    UINT is_no_light;
 };
 
 struct vs_const_buffer_t {
@@ -49,7 +50,7 @@ public:
     void resize();
     void destroy();
 
-    void checkKeys();
+    //void checkKeys();
 
     //HWND GetHWND() const { return hwnd; }
     UINT GetWidth() const { return width; }
@@ -93,7 +94,8 @@ private:
     ComPtr<ID3D12Resource> houseVertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW houseVertexBufferView;
 
-
+    ComPtr<ID3D12Resource> groundVertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW groundVertexBufferView;
 
     ComPtr<ID3D12Resource> constBuffer;
     UINT8* constBufferData;
@@ -141,6 +143,7 @@ private:
     void createFence();
     std::pair<Vertex*, size_t> getVertices();
     std::pair<Vertex*, size_t> getHouseVertices();
+    std::pair<Vertex*, size_t> getGroundVertices();
 
     HRESULT LoadBitmapFromFile(
         PCWSTR uri, UINT& width, UINT& height, BYTE** ppBits
