@@ -5,12 +5,6 @@ HWND WinApp::hwnd = nullptr;
 
 int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
 {
-    // Parse the command line parameters
-    //int argc;
-    //LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    //dApp->ParseCommandLineArgs(argv, argc);
-    //LocalFree(argv);
-
     // Initialize the window class.
     WNDCLASSEX windowClass = { 0 };
     windowClass.cbSize = sizeof(WNDCLASSEX);
@@ -20,19 +14,39 @@ int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     windowClass.lpszClassName = L"DXSampleClass";
     RegisterClassEx(&windowClass);
+    //windowClass.lpfnWndProc = WindowProc;
+    //windowClass.hInstance = hInstance;
+    //windowClass.lpszClassName = L"DXSampleClass";
 
-    RECT windowRect = { 0, 0, static_cast<LONG>(dApp->GetWidth()), static_cast<LONG>(dApp->GetHeight()) };
-    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+    //if (RegisterClass(&windowClass) == 0) {
+    //    return 1;
+    //}
+    //RECT windowRect = { 0, 0, static_cast<LONG>(dApp->GetWidth()), static_cast<LONG>(dApp->GetHeight()) };
+    //AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+    RECT desktop;
+    GetClientRect(GetDesktopWindow(), &desktop);
+    /*hwnd = CreateWindowEx(
+        0, 
+        windowClass.lpszClassName, 
+        dApp->GetTitle(),
+        WS_POPUP,
+        0, 0,
+        desktop.right,
+        desktop.bottom,
+        nullptr, nullptr, hInstance, nullptr
+    );*/
+
 
     // Create the window and store a handle to it.
     hwnd = CreateWindow(
         windowClass.lpszClassName,
         dApp->GetTitle(),
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        windowRect.right - windowRect.left,
-        windowRect.bottom - windowRect.top,
+        WS_POPUPWINDOW,
+        0,
+        0,
+        desktop.right,
+        desktop.bottom,
         nullptr,        // We have no parent window.
         nullptr,        // We aren't using menus.
         hInstance,
@@ -76,26 +90,9 @@ LRESULT CALLBACK WinApp::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     }
     return 0;
 
-    case WM_KEYDOWN:
-        if (dApp)
-        {
-            //dApp->onKeyDown(wParam);
-            //dApp->update();
-            //dApp->OnKeyDown(static_cast<UINT8>(wParam));
-        }
-        return 0;
-
-    case WM_KEYUP:
-        if (dApp)
-        {
-            //dApp->OnKeyUp(static_cast<UINT8>(wParam));
-        }
-        return 0;
-
     case WM_PAINT:
         if (dApp)
         {
-            //dApp->checkKeys();
             dApp->update();
             dApp->render();
         }
