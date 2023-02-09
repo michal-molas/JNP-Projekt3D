@@ -97,6 +97,9 @@ private:
     ComPtr<ID3D12Resource> groundVertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW groundVertexBufferView;
 
+    ComPtr<ID3D12Resource> rockVertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW rockVertexBufferView;
+
     ComPtr<ID3D12Resource> constBuffer;
     UINT8* constBufferData;
 
@@ -144,6 +147,7 @@ private:
     std::pair<Vertex*, size_t> getVertices();
     std::pair<Vertex*, size_t> getHouseVertices();
     std::pair<Vertex*, size_t> getGroundVertices();
+    std::pair<Vertex*, size_t> getRockVertices();
 
     HRESULT LoadBitmapFromFile(
         PCWSTR uri, UINT& width, UINT& height, BYTE** ppBits
