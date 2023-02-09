@@ -2,8 +2,10 @@
 #include "WinApp.h"
 
 _Use_decl_annotations_
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int nCmdShow)
 {
-    D3DApp sample(1280, 720, L"D3D12 Hello Window");
+    RECT desktop;
+    GetClientRect(GetDesktopWindow(), &desktop);
+    D3DApp sample(desktop.right, desktop.bottom, L"3D App");
     return WinApp::Run(&sample, hInstance, nCmdShow);
 }

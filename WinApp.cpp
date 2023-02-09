@@ -5,12 +5,6 @@ HWND WinApp::hwnd = nullptr;
 
 int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
 {
-    // Parse the command line parameters
-    //int argc;
-    //LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    //dApp->ParseCommandLineArgs(argv, argc);
-    //LocalFree(argv);
-
     // Initialize the window class.
     WNDCLASSEX windowClass = { 0 };
     windowClass.cbSize = sizeof(WNDCLASSEX);
@@ -18,28 +12,29 @@ int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    ShowCursor(FALSE);
     windowClass.lpszClassName = L"DXSampleClass";
     RegisterClassEx(&windowClass);
 
-    RECT windowRect = { 0, 0, static_cast<LONG>(dApp->GetWidth()), static_cast<LONG>(dApp->GetHeight()) };
-    AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+    RECT desktop;
+    GetClientRect(GetDesktopWindow(), &desktop);
 
     // Create the window and store a handle to it.
     hwnd = CreateWindow(
         windowClass.lpszClassName,
         dApp->GetTitle(),
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        windowRect.right - windowRect.left,
-        windowRect.bottom - windowRect.top,
+        WS_POPUPWINDOW,
+        0,
+        0,
+        desktop.right,
+        desktop.bottom,
         nullptr,        // We have no parent window.
         nullptr,        // We aren't using menus.
         hInstance,
         dApp);
 
     // Initialize the sample. OnInit is defined in each child-implementation of DXSample.
-    dApp->OnInit();
+    dApp->init();
 
     ShowWindow(hwnd, nCmdShow);
 
@@ -55,7 +50,7 @@ int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
         }
     }
 
-    dApp->OnDestroy();
+    dApp->destroy();
 
     // Return this part of the WM_QUIT message to Windows.
     return static_cast<char>(msg.wParam);
@@ -76,25 +71,11 @@ LRESULT CALLBACK WinApp::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
     }
     return 0;
 
-    case WM_KEYDOWN:
-        if (dApp)
-        {
-            //dApp->OnKeyDown(static_cast<UINT8>(wParam));
-        }
-        return 0;
-
-    case WM_KEYUP:
-        if (dApp)
-        {
-            //dApp->OnKeyUp(static_cast<UINT8>(wParam));
-        }
-        return 0;
-
     case WM_PAINT:
         if (dApp)
         {
-            dApp->OnUpdate();
-            dApp->OnRender();
+            dApp->update();
+            dApp->render();
         }
         return 0;
 
