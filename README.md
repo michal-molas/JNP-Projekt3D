@@ -1,6 +1,6 @@
 # JNP-Projekt3D
 
-Jako projekt zaliczeniowy Direct2D, napisałem scenę zawierającą dom, drzewo (z pracy domowej) oraz kamień.
+Jako projekt zaliczeniowy Direct3D, napisałem scenę zawierającą dom, drzewo (z pracy domowej) oraz kamień.
 
 Po scenie można się poruszać (strałkami lub WASD) oraz obracać (Q - obrót w lewo, E - obrót w prawo).
 
