@@ -15,7 +15,6 @@ inline void ThrowIfFailed(HRESULT hr)
 {
     if (FAILED(hr))
     {
-        // ssss
         exit(hr);
     }
 }
@@ -50,17 +49,11 @@ public:
     void resize();
     void destroy();
 
-    //void checkKeys();
-
-    //HWND GetHWND() const { return hwnd; }
     UINT GetWidth() const { return width; }
     UINT GetHeight() const { return height; }
     const TCHAR* GetTitle() const { return title; }
 
-    //void SetHWND(HWND hwnd) { this->hwnd = hwnd; }
-
 private:
-    //HWND hwnd;
     UINT width;
     UINT height;
     FLOAT aspectRatio;
@@ -113,16 +106,11 @@ private:
     ComPtr<ID3D12Fence> fence;
     UINT64 fenceValue;
 
-    XMFLOAT3 offset = {0.f, 0.f, 0.f};
-    FLOAT rotation = 0.0f;
-
     UINT const bmp_px_size = 4;
     UINT bmp_width = 0, bmp_height = 0;
     BYTE* bmp_bits = nullptr;
 
     XMMATRIX tempMatrix;
-
-    float angle;
 
     void loadPipeline();
     void loadAssets();
@@ -143,6 +131,7 @@ private:
         D3D12_VERTEX_BUFFER_VIEW& bufferView);
     void createConstBuffer();
     void createDepthBuffer();
+    void createTexture();
     void createFence();
     std::pair<Vertex*, size_t> getVertices();
     std::pair<Vertex*, size_t> getHouseVertices();

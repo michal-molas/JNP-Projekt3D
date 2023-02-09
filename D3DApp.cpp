@@ -1,7 +1,5 @@
 #include "d3dx12.h"
-#include <cmath>
 
-//#include "exceptions.h"
 #include "WinApp.h"
 #include "D3DApp.h"
 
@@ -10,15 +8,10 @@
 
 #include <wincodec.h>
 
-namespace {
-    float pi() { return static_cast<float>(std::atan(1.f)) * 4.f; }
-}
-
 D3DApp::D3DApp(UINT width, UINT height, CONST TCHAR* name) :
     width(width),
     height(height),
     title(name),
-    angle(0),
     scissorRect(CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX)),
     viewport(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)))
 {
@@ -66,14 +59,7 @@ void D3DApp::loadPipeline()
     createCommandAllocator();
 }
 
-void D3DApp::loadAssets()
-{
-    createRootSignature();
-    createPipelineState();
-    createCommandList();
-    createBuffers();
-    createFence();
-
+void D3DApp::createTexture() {
     // Budowa w³aœciwego zasobu tekstury
     D3D12_HEAP_PROPERTIES tex_heap_prop = {
     .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -114,7 +100,7 @@ void D3DApp::loadAssets()
         &Desc, 0, 1, 0, nullptr, nullptr, nullptr, &RequiredSize
     );
     pDevice->Release();
-    
+
     D3D12_HEAP_PROPERTIES tex_upload_heap_prop = {
         .Type = D3D12_HEAP_TYPE_UPLOAD,
         .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
@@ -152,8 +138,6 @@ void D3DApp::loadAssets()
     ThrowIfFailed(commandAllocator->Reset());
     ThrowIfFailed(commandList->Reset(commandAllocator.Get(), pipelineState.Get()));
 
-    // ... ID3D12GraphicsCommandList::Reset() - to dlatego lista
-// poleceñ i obiekt stanu potoku musz¹ byæ wczeœniej utworzone
     UINT const MAX_SUBRESOURCES = 1;
     RequiredSize = 0;
     D3D12_PLACED_SUBRESOURCE_FOOTPRINT Layouts[MAX_SUBRESOURCES];
@@ -243,12 +227,12 @@ void D3DApp::loadAssets()
     };
     D3D12_CPU_DESCRIPTOR_HANDLE cpu_desc_handle =
         constBufferHeap->GetCPUDescriptorHandleForHeapStart();
-    
+
     cpu_desc_handle.ptr +=
         device->GetDescriptorHandleIncrementSize(
             D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
         );
-    
+
     device->CreateShaderResourceView(
         texture_resource.Get(), &srv_desc, cpu_desc_handle
     );
@@ -262,14 +246,16 @@ void D3DApp::loadAssets()
 
     //// Increment the fence value for the current frame.
     fenceValue++;
-//}
-    // ... WaitForGPU() - nie mo¿na usuwaæ texture_upload_buffer
-    // zanim nie skopiuje siê jego zawartoœci
+}
 
-
-
-
-    
+void D3DApp::loadAssets()
+{
+    createRootSignature();
+    createPipelineState();
+    createCommandList();
+    createBuffers();
+    createFence();
+    createTexture();
 }
 
 void D3DApp::update()
@@ -314,7 +300,7 @@ void D3DApp::update()
     wvp_matrix = XMMatrixMultiply(
         wvp_matrix,
         XMMatrixPerspectiveFovLH(
-            pi() / 4.f, viewport.Width / viewport.Height, 0.1f, 100.0f
+            3.14159f / 4.f, viewport.Width / viewport.Height, 0.1f, 100.0f
         )
     );
 
@@ -328,8 +314,6 @@ void D3DApp::update()
         &vsConstBuffer,
         sizeof(vsConstBuffer)
     );
-
-    angle += 1. / 128.;
 }
 
 void D3DApp::render()
@@ -357,9 +341,6 @@ void D3DApp::populateCommandList()
     ThrowIfFailed(commandList->Reset(commandAllocator.Get(), pipelineState.Get()));
 
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    //commandList->SetGraphicsRootDescriptorTable(
-    //    0, constBufferHeap->GetGPUDescriptorHandleForHeapStart()
-    //);
 
     D3D12_GPU_DESCRIPTOR_HANDLE gpu_desc_handle =
         constBufferHeap->
@@ -412,8 +393,6 @@ void D3DApp::populateCommandList()
 
     commandList->IASetVertexBuffers(0, 1, &rockVertexBufferView);
     commandList->DrawInstanced(static_cast<UINT>(getRockVertices().second / sizeof(Vertex)), 1, 0, 0);
-
-
 
     barriers = CD3DX12_RESOURCE_BARRIER::Transition(
         renderTargets[frameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,

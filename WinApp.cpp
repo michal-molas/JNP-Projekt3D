@@ -12,31 +12,12 @@ int WinApp::Run(D3DApp* dApp, HINSTANCE hInstance, int nCmdShow)
     windowClass.lpfnWndProc = WindowProc;
     windowClass.hInstance = hInstance;
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    ShowCursor(FALSE);
     windowClass.lpszClassName = L"DXSampleClass";
     RegisterClassEx(&windowClass);
-    //windowClass.lpfnWndProc = WindowProc;
-    //windowClass.hInstance = hInstance;
-    //windowClass.lpszClassName = L"DXSampleClass";
-
-    //if (RegisterClass(&windowClass) == 0) {
-    //    return 1;
-    //}
-    //RECT windowRect = { 0, 0, static_cast<LONG>(dApp->GetWidth()), static_cast<LONG>(dApp->GetHeight()) };
-    //AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     RECT desktop;
     GetClientRect(GetDesktopWindow(), &desktop);
-    /*hwnd = CreateWindowEx(
-        0, 
-        windowClass.lpszClassName, 
-        dApp->GetTitle(),
-        WS_POPUP,
-        0, 0,
-        desktop.right,
-        desktop.bottom,
-        nullptr, nullptr, hInstance, nullptr
-    );*/
-
 
     // Create the window and store a handle to it.
     hwnd = CreateWindow(
